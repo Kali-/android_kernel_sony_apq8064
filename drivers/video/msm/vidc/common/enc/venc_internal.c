@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1688,7 +1688,7 @@ u32 vid_enc_encode_frame(struct video_client_ctx *client_ctx,
 				&buff_handle);
 
 		if (vcd_input_buffer.data_len > 0) {
-			if (ion_flag == CACHED && buff_handle) {
+			if (ion_flag == ION_FLAG_CACHED && buff_handle) {
 				msm_ion_do_cache_op(
 				client_ctx->user_ion_client,
 				buff_handle,
@@ -1837,7 +1837,8 @@ u32 vid_enc_set_recon_buffers(struct video_client_ctx *client_ctx,
 		}
 		control->kernel_virtual_addr = (u8 *) ion_map_kernel(
 			client_ctx->user_ion_client,
-			client_ctx->recon_buffer_ion_handle[i]);
+			client_ctx->recon_buffer_ion_handle[i],
+			ionflag);
 		if (!control->kernel_virtual_addr) {
 			ERR("%s(): get_ION_kernel virtual addr fail\n",
 				 __func__);
@@ -1866,10 +1867,11 @@ u32 vid_enc_set_recon_buffers(struct video_client_ctx *client_ctx,
 					0,
 					(unsigned long *)&iova,
 					(unsigned long *)&buffer_size,
-					UNCACHED, 0);
-			if (rc) {
-				ERR("%s():ION map iommu addr fail\n",
-					 __func__);
+					0, 0);
+			if (rc || !iova) {
+				ERR(
+				"%s():ION map iommu addr fail, rc = %d, iova = 0x%lx\n",
+					__func__, rc, iova);
 				goto map_ion_error;
 			}
 			control->physical_addr =  (u8 *) iova;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -45,7 +45,7 @@
 #define VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_PROFILE_SHFT      0
 
 #define VIDC_SM_DISP_PIC_FRAME_TYPE_ADDR                    0x00c0
-#define VIDC_SM_DISP_PIC_FRAME_TYPE_BMSK                    0x00000003
+#define VIDC_SM_DISP_PIC_FRAME_TYPE_BMSK                    0x0000003f
 #define VIDC_SM_DISP_PIC_FRAME_TYPE_SHFT                    0
 
 #define VIDC_SM_FREE_LUMA_DPB_ADDR                          0x00c4
@@ -966,7 +966,7 @@ void vidc_sm_get_aspect_ratio_info(struct ddl_buf_addr *shared_mem,
 				VIDC_SM_EXTENDED_PAR_HEIGHT_SHFT);
 			break;
 		default:
-			DDL_MSG_HIGH("Incorrect Aspect Ratio.");
+			DDL_MSG_LOW("Incorrect Aspect Ratio.");
 			aspect_ratio_info->par_width    = 1;
 			aspect_ratio_info->par_height   = 1;
 			break;
@@ -1024,7 +1024,7 @@ void vidc_sm_get_aspect_ratio_info(struct ddl_buf_addr *shared_mem,
 				VIDC_SM_EXTENDED_PAR_HEIGHT_SHFT);
 			break;
 		default:
-			DDL_MSG_HIGH("Incorrect Aspect Ratio.");
+			DDL_MSG_LOW("Incorrect Aspect Ratio.");
 			aspect_ratio_info->par_width    = 1;
 			aspect_ratio_info->par_height   = 1;
 			break;
