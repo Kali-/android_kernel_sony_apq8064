@@ -540,7 +540,7 @@ static int hdmi_core_power(int on, int show);
 static int hdmi_cec_power(int on);
 static int hdmi_gpio_config(int on);
 static int hdmi_panel_power(int on);
-static bool hdmi_platform_foundry(void);
+static bool hdmi_platform_source(void);
 
 static struct msm_hdmi_platform_data hdmi_msm_data = {
 	.irq = HDMI_IRQ,
@@ -549,7 +549,7 @@ static struct msm_hdmi_platform_data hdmi_msm_data = {
 	.cec_power = hdmi_cec_power,
 	.panel_power = hdmi_panel_power,
 	.gpio_config = hdmi_gpio_config,
-	.foundry = hdmi_platform_foundry,
+	.source = hdmi_platform_source,
 };
 
 static struct platform_device hdmi_msm_device = {
@@ -809,7 +809,20 @@ error:
 	return rc;
 }
 
-static bool hdmi_platform_foundry(void)
+static int hdmi_panel_power(int on)
+{
+	int rc;
+
+	pr_debug("%s: HDMI Core: %s\n", __func__, (on ? "ON" : "OFF"));
+	rc = hdmi_core_power(on, 1);
+	if (rc)
+		rc = hdmi_cec_power(on);
+
+	pr_debug("%s: HDMI Core: %s Success\n", __func__, (on ? "ON" : "OFF"));
+	return rc;
+}
+
+static bool hdmi_platform_source(void)
 {
 	return cpu_is_msm8930ab() ? true : false ;
 }
