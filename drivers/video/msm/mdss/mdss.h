@@ -84,7 +84,6 @@ enum mdss_hw_index {
 
 struct mdss_hw {
 	u32 hw_ndx;
-	void *ptr;
 	irqreturn_t (*irq_handler)(int irq, void *ptr);
 };
 
