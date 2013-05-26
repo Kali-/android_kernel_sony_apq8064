@@ -17,6 +17,11 @@
 #include "mdss_hdmi_util.h"
 #include "mdss_io_util.h"
 
+#define HDMI_TX_EXTP_CLK_DEFAULT 148500000
+#define HDMI_TX_EXTP_CLK_LOW     148500000
+#define HDMI_TX_EXTP_CLK_NOMINAL 297000000
+#define HDMI_TX_EXTP_CLK_TURBO   297000000 /* ToDo: Find correct value */
+
 enum hdmi_tx_clk_type {
 	HDMI_TX_AHB_CLK,
 	HDMI_TX_APP_CLK,
@@ -38,9 +43,14 @@ enum hdmi_tx_power_module_type {
 	HDMI_TX_MAX_PM
 };
 
+struct hdmi_tx_io_data {
+	u32 len;
+	void __iomem *base;
+};
+
 struct hdmi_tx_platform_data {
 	/* Data filled from device tree nodes */
-	struct dss_io_data io[HDMI_TX_MAX_IO];
+	struct hdmi_tx_io_data io[HDMI_TX_MAX_IO];
 	struct dss_module_power power_data[HDMI_TX_MAX_PM];
 
 	/* clk and regulator handles */
