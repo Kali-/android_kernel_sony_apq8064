@@ -41,9 +41,9 @@ struct mdss_data_type {
 
 	struct workqueue_struct *clk_ctrl_wq;
 	struct delayed_work clk_ctrl_worker;
-	struct platform_device *pdev;
 	char __iomem *mdp_base;
-	char __iomem *vbif_base;
+
+	struct platform_device *pdev;
 
 	u32 irq;
 	u32 irq_mask;
