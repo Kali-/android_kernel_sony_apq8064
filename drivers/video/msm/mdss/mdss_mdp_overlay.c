@@ -13,7 +13,6 @@
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
 
-#include <linux/dma-mapping.h>
 #include <linux/errno.h>
 #include <linux/kernel.h>
 #include <linux/major.h>
@@ -603,23 +602,14 @@ static void mdss_mdp_overlay_pan_display(struct msm_fb_data_type *mfd)
 		mfd->kickoff_fnc(mfd->ctl);
 }
 
-static int mdss_mdp_hw_cursor_update(struct msm_fb_data_type *mfd,
+static int mdss_mdp_hw_cursor_update(struct fb_info *info,
 				     struct fb_cursor *cursor)
 {
+	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
 	struct mdss_mdp_mixer *mixer;
 	struct fb_image *img = &cursor->image;
-	u32 blendcfg;
+	int calpha_en, transp_en, blendcfg, alpha;
 	int off, ret = 0;
-
-	if (!mfd->cursor_buf) {
-		mfd->cursor_buf = dma_alloc_coherent(NULL, MDSS_MDP_CURSOR_SIZE,
-					(dma_addr_t *) &mfd->cursor_buf_phys,
-					GFP_KERNEL);
-		if (!mfd->cursor_buf) {
-			pr_err("can't allocate cursor buffer\n");
-			return -ENOMEM;
-		}
-	}
 
 	mixer = mdss_mdp_mixer_get(mfd->ctl, MDSS_MDP_MIXER_MUX_DEFAULT);
 	off = MDSS_MDP_REG_LM_OFFSET(mixer->num);
@@ -640,7 +630,6 @@ static int mdss_mdp_hw_cursor_update(struct msm_fb_data_type *mfd,
 				   (img->dy << 16) | img->dx);
 
 	if (cursor->set & FB_CUR_SETIMAGE) {
-		int calpha_en, transp_en, alpha, size;
 		ret = copy_from_user(mfd->cursor_buf, img->data,
 				     img->width * img->height * 4);
 		if (ret)
@@ -658,9 +647,8 @@ static int mdss_mdp_hw_cursor_update(struct msm_fb_data_type *mfd,
 		else
 			calpha_en = 0x2; /* argb */
 
-		size = (img->height << 16) | img->width;
-		MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_CURSOR_IMG_SIZE, size);
-		MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_CURSOR_SIZE, size);
+		MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_CURSOR_SIZE,
+				   (img->height << 16) | img->width);
 		MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_CURSOR_STRIDE,
 				   img->width * 4);
 		MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_CURSOR_BASE_ADDR,
@@ -696,13 +684,10 @@ static int mdss_mdp_hw_cursor_update(struct msm_fb_data_type *mfd,
 	}
 
 	if (!cursor->enable != !(blendcfg & 0x1)) {
-		if (cursor->enable) {
-			pr_debug("enable hw cursor on mixer=%d\n", mixer->num);
+		if (cursor->enable)
 			blendcfg |= 0x1;
-		} else {
-			pr_debug("disable hw cursor on mixer=%d\n", mixer->num);
+		else
 			blendcfg &= ~0x1;
-		}
 
 		MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_CURSOR_BLEND_CONFIG,
 				   blendcfg);
@@ -824,6 +809,7 @@ int mdss_mdp_overlay_init(struct msm_fb_data_type *mfd)
 	mfd->on_fnc = mdss_mdp_ctl_on;
 	mfd->off_fnc = mdss_mdp_ctl_off;
 	mfd->hw_refresh = true;
+	mfd->lut_update = NULL;
 	mfd->do_histogram = NULL;
 	mfd->overlay_play_enable = true;
 	mfd->cursor_update = mdss_mdp_hw_cursor_update;
