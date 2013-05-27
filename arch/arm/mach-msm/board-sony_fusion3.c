@@ -875,6 +875,11 @@ static void reserve_debug_memory(void)
 			S1BOOT_RPM_AREA_SIZE, S1BOOT_RPM_AREA_START);
 }
 
+static void __init reserve_mpdcvs_memory(void)
+{
+	apq8064_reserve_table[MEMTYPE_EBI1].size += SZ_32K;
+}
+
 static void __init apq8064_calculate_reserve_sizes(void)
 {
 	size_pmem_devices();
@@ -883,6 +888,7 @@ static void __init apq8064_calculate_reserve_sizes(void)
 	reserve_mdp_memory();
 	reserve_rtb_memory();
 	reserve_cache_dump_memory();
+	reserve_mpdcvs_memory();
 }
 
 static struct reserve_info apq8064_reserve_info __initdata = {
@@ -3776,6 +3782,8 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm_pil_vidc,
 	&msm_gss,
 	&apq8064_rtb_device,
+	&apq8064_dcvs_device,
+	&apq8064_msm_gov_device,
 	&apq8064_cpu_idle_device,
 	#ifdef CONFIG_GPIO_SEMC_ETS
 	&semc_gpios_device,
