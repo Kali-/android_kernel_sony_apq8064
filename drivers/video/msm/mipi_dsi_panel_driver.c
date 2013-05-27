@@ -97,10 +97,6 @@ static struct msm_panel_info default_pinfo = {
 	.mipi.tx_eot_append = TRUE,
 	.mipi.t_clk_post = 0x04,
 	.mipi.t_clk_pre = 0x1B,
-#if defined(CONFIG_FB_MSM_MIPI_R63306_JDC_MDZ50) || \
-		defined(CONFIG_FB_MSM_MIPI_R63306_SHARP_LS046K3SX01)
-	.mipi.esc_byte_ratio = 4,
-#endif
 	.mipi.stream = 0,
 	.mipi.mdp_trigger = DSI_CMD_TRIGGER_SW,
 	.mipi.dma_trigger = DSI_CMD_TRIGGER_SW,
@@ -1313,7 +1309,6 @@ static ssize_t mipi_dsi_panel_nvm_store(struct device *dev,
 {
 	struct mipi_dsi_data *dsi_data = dev_get_drvdata(dev);
 	struct msm_fb_data_type *mfd = dsi_data->nvrw_private;
-	struct msm_fb_panel_data *pdata;
 	int rc;
 	enum power_state old_state = PANEL_OFF;
 
@@ -1394,10 +1389,11 @@ release_exit:
 	mfd->nvrw_prohibit_draw = false;
 
 	if (dsi_data->nvrw_panel_detective) {
-		pdata = (struct msm_fb_panel_data *)mfd->pdev->
-						dev.platform_data;
-		pdata->off(mfd->pdev);
-		pdata->on(mfd->pdev);
+		struct fb_info *fbi = mfd->fbi;
+		if (fbi && fbi->fbops && fbi->fbops->fb_blank) {
+			fbi->fbops->fb_blank(FB_BLANK_POWERDOWN, fbi);
+			fbi->fbops->fb_blank(FB_BLANK_UNBLANK, fbi);
+		}
 	}
 exit:
 	return count;
