@@ -638,7 +638,7 @@ static int msm_vpe_start_transfer(struct msm_vpe_transfer_cfg *transfercmd,
 #ifdef CONFIG_MSM_IOMMU
 		rc = ion_map_iommu(vpe_client, src_ionhandle,
 				   vpe_ctrl->domain_num, 0, SZ_4K, 0,
-				   &src_paddr, &src_len, UNCACHED, 0);
+				   &src_paddr, &src_len, 0, 0);
 #else
 		rc = ion_phys(vpe_client,
 			      src_ionhandle,
@@ -675,7 +675,7 @@ static int msm_vpe_start_transfer(struct msm_vpe_transfer_cfg *transfercmd,
 #ifdef CONFIG_MSM_IOMMU
 		rc = ion_map_iommu(vpe_client, dst_ionhandle,
 				   vpe_ctrl->domain_num, 0, SZ_4K, 0,
-				   &dst_paddr, &dst_len, UNCACHED, 0);
+				   &dst_paddr, &dst_len, 0, 0);
 #else
 		rc = ion_phys(vpe_client,
 			      dst_ionhandle,
@@ -803,7 +803,7 @@ static int msm_vpe_pmem_register(struct msm_vpe_register_cfg *registercmd,
 		return 0;
 #ifdef CONFIG_MSM_IOMMU
 	rc = ion_map_iommu(vpe_client, ionhandle, vpe_ctrl->domain_num, 0,
-				SZ_4K, 0, &paddr, &len, UNCACHED, 0);
+				SZ_4K, 0, &paddr, &len, 0, 0);
 #else
 	rc = ion_phys(vpe_client, ionhandle, &paddr, (size_t *)&len);
 #endif
