@@ -3784,7 +3784,6 @@ static struct platform_device *common_devices[] __initdata = {
 	&apq8064_rtb_device,
 	&apq8064_dcvs_device,
 	&apq8064_msm_gov_device,
-	&apq8064_cpu_idle_device,
 	#ifdef CONFIG_GPIO_SEMC_ETS
 	&semc_gpios_device,
 	#endif
