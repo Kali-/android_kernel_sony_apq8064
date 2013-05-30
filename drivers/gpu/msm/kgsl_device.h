@@ -134,7 +134,6 @@ struct kgsl_event {
 	void *priv;
 	struct list_head list;
 	void *owner;
-	unsigned int created;
 };
 
 
