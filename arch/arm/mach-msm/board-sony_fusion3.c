@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
  * Copyright (C) 2012-2013 Sony Mobile Communications AB.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -169,6 +169,7 @@
 
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 #define HOLE_SIZE		0x20000
+#define MSM_ION_MFC_META_SIZE	0x40000 /* 256 Kbytes */
 #define MSM_CONTIG_MEM_SIZE	0x65000
 #ifdef CONFIG_MSM_IOMMU
 #define MSM_ION_MM_SIZE		0x5000000
@@ -183,7 +184,7 @@
 #define MSM_ION_HEAP_NUM	8
 #endif
 #define MSM_ION_MM_FW_SIZE	(0x200000 - HOLE_SIZE) /* (2MB - 128KB) */
-#define MSM_ION_MFC_SIZE	SZ_8K
+#define MSM_ION_MFC_SIZE	(SZ_8K + MSM_ION_MFC_META_SIZE)
 #define MSM_ION_AUDIO_SIZE	0x4CF000
 #else
 #define MSM_CONTIG_MEM_SIZE	0x110C000
