@@ -145,8 +145,6 @@
 
 /* extern declarations */
 extern void vos_WDAComplete_cback(v_PVOID_t pVosContext);
-extern wpt_uint8 WDI_GetActiveSessionsCount (void *pWDICtx, wpt_macAddr macBSSID, wpt_boolean skipBSSID);
-
 /* forward declarations */
 void WDA_SendMsg(tWDA_CbContext *pWDA, tANI_U16 msgType, 
                                         void *pBodyptr, tANI_U32 bodyVal) ;
@@ -3643,8 +3641,6 @@ void WDA_UpdateBSSParams(tWDA_CbContext *pWDA,
    wdiBssParams->ucCurrentExtChannel = wdaBssParams->currentExtChannel ;
    wdiBssParams->bHiddenSSIDEn = wdaBssParams->bHiddenSSIDEn ;
 
-   wdiBssParams->ucRMFEnabled = wdaBssParams->rmfEnabled;
-
    /* copy SSID into WDI structure */
    wdiBssParams->wdiSSID.ucLength = wdaBssParams->ssId.length ;
    vos_mem_copy(wdiBssParams->wdiSSID.sSSID,
@@ -4733,9 +4729,7 @@ void WDA_SetLinkStateCallback(WDI_Status status, void* pUserData)
     * and in AP mode start BA activity check timer after BSS start */
    if( ((linkStateParams->state == eSIR_LINK_POSTASSOC_STATE) &&
          status == WDI_STATUS_SUCCESS) ||  ((status == WDI_STATUS_SUCCESS) &&
-       (linkStateParams->state == eSIR_LINK_AP_STATE)) ||
-       ((status == WDI_STATUS_SUCCESS) &&
-       (linkStateParams->state == eSIR_LINK_IBSS_STATE)))
+       (linkStateParams->state == eSIR_LINK_AP_STATE)) )
    {
       WDA_START_TIMER(&pWDA->wdaTimers.baActivityChkTmr);
    }
@@ -4816,7 +4810,7 @@ VOS_STATUS WDA_ProcessSetLinkState(tWDA_CbContext *pWDA,
       pWdaParams->wdaWdiApiMsgParam = (void *)wdiSetLinkStateParam ;
       /* Stop Timer only other than GO role and concurrent session */
       if( (linkStateParams->state == eSIR_LINK_IDLE_STATE)
-          && (0 == WDI_GetActiveSessionsCount(pWDA->pWdiContext, linkStateParams->bssid, TRUE)) &&
+          && !vos_concurrent_sessions_running() &&
           (wdaGetGlobalSystemRole(pMac) != eSYSTEM_AP_ROLE) )
       {
          WDA_STOP_TIMER(&pWDA->wdaTimers.baActivityChkTmr);
@@ -7701,42 +7695,6 @@ VOS_STATUS WDA_ProcessWlanSuspendInd(tWDA_CbContext *pWDA,
    vos_mem_free(pWlanSuspendParam);
    return CONVERT_WDI2VOS_STATUS(wdiStatus) ;
 }
-
-#ifdef WLAN_FEATURE_11W
-/*
- * FUNCTION: WDA_ProcessExcludeUnecryptInd
- *
- */
-VOS_STATUS WDA_ProcessExcludeUnecryptInd(tWDA_CbContext *pWDA,
-                              tSirWlanExcludeUnencryptParam *pExclUnencryptParam)
-{
-   WDI_Status wdiStatus;
-   WDI_ExcludeUnencryptIndType wdiExclUnencryptParams;
-   VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_INFO,
-                                          "------> %s ", __func__);
-
-   wdiExclUnencryptParams.bExcludeUnencrypt = pExclUnencryptParam->excludeUnencrypt;
-   vos_mem_copy(wdiExclUnencryptParams.bssid, pExclUnencryptParam->bssId,
-                sizeof(tSirMacAddr));
-
-   wdiExclUnencryptParams.wdiReqStatusCB = NULL;
-   wdiExclUnencryptParams.pUserData = pWDA;
-
-   wdiStatus = WDI_ExcludeUnencryptedInd(&wdiExclUnencryptParams);
-   if(WDI_STATUS_PENDING == wdiStatus)
-   {
-      VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_INFO,
-              "Pending received for %s:%d ", __func__, __LINE__ );
-   }
-   else if( WDI_STATUS_SUCCESS_SYNC != wdiStatus )
-   {
-      VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_ERROR,
-              "Failure in %s:%d ", __func__, __LINE__ );
-   }
-   vos_mem_free(pExclUnencryptParam);
-   return CONVERT_WDI2VOS_STATUS(wdiStatus) ;
-}
-#endif
 
 /*
  * FUNCTION: WDA_ProcessWlanResumeCallback
@@ -10996,13 +10954,6 @@ VOS_STATUS WDA_McProcessMsg( v_CONTEXT_t pVosContext, vos_msg_t *pMsg )
                    VOS_TRACE(VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_ERROR,
                                             " 11AC Feature is Not Supported \n");
           break;
-      }
-#endif
-#ifdef WLAN_FEATURE_11W
-      case WDA_EXCLUDE_UNENCRYPTED_IND:
-      {
-         WDA_ProcessExcludeUnecryptInd(pWDA, (tSirWlanExcludeUnencryptParam *)pMsg->bodyptr);
-         break;
       }
 #endif
       default:

@@ -364,11 +364,6 @@ WDI_ReqProcFuncType  pfnReqProcTbl[WDI_MAX_UMAC_IND] =
   -------------------------------------------------------------------------*/
   WDI_ProcessHostSuspendInd,            /* WDI_HOST_SUSPEND_IND*/
   WDI_ProcessTrafficStatsInd,           /* WDI_TRAFFIC_STATS_IND*/
-#ifdef WLAN_FEATURE_11W
-  WDI_ProcessExcludeUnencryptInd,       /* WDI_EXCLUDE_UNENCRYPTED_IND */
-#else
-  NULL,
-#endif
 };
 
 
@@ -876,9 +871,6 @@ static char *WDI_getReqMsgString(wpt_uint16 wdiReqMsgId)
     CASE_RETURN_STRING( WDI_SET_POWER_PARAMS_REQ );
     CASE_RETURN_STRING( WDI_TRAFFIC_STATS_IND );
     CASE_RETURN_STRING( WDI_GET_ROAM_RSSI_REQ );
-#ifdef WLAN_FEATURE_11W
-    CASE_RETURN_STRING( WDI_EXCLUDE_UNENCRYPTED_IND );
-#endif
     default:
         return "Unknown WDI MessageId";
   }
@@ -5735,52 +5727,6 @@ WDI_TrafficStatsInd
 
 }/*WDI_TrafficStatsInd*/
 
-#ifdef WLAN_FEATURE_11W
-/**
- @brief WDI_ExcludeUnencryptedInd
-       Register with HAL to receive/drop unencrypted frames
-
- @param WDI_ExcludeUnencryptIndType
-
- @see
-
- @return Status of the request
-*/
-WDI_Status
-WDI_ExcludeUnencryptedInd
-(
-  WDI_ExcludeUnencryptIndType *pWdiExcUnencParams
-)
-{
-
-  WDI_EventInfoType      wdiEventData;
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  /*------------------------------------------------------------------------
-    Sanity Check
-  ------------------------------------------------------------------------*/
-  if ( eWLAN_PAL_FALSE == gWDIInitialized )
-  {
-    WPAL_TRACE(eWLAN_MODULE_DAL_CTRL, eWLAN_PAL_TRACE_LEVEL_ERROR,
-              "WDI API call before module is initialized - Fail request");
-
-    return WDI_STATUS_E_NOT_ALLOWED;
-  }
-
-  /*------------------------------------------------------------------------
-    Fill in Event data and post to the Main FSM
-  ------------------------------------------------------------------------*/
-  wdiEventData.wdiRequest      = WDI_EXCLUDE_UNENCRYPTED_IND;
-  wdiEventData.pEventData      = pWdiExcUnencParams;
-  wdiEventData.uEventDataSize  = sizeof(*pWdiExcUnencParams);
-  wdiEventData.pCBfnc          = NULL;
-  wdiEventData.pUserData       = NULL;
-
-  return WDI_PostMainEvent(&gWDICb, WDI_REQUEST_EVENT, &wdiEventData);
-
-}/*WDI_TrafficStatsInd*/
-#endif
-
 /**
  @brief WDI_HALDumpCmdReq
         Post HAL DUMP Command Event
@@ -10490,7 +10436,7 @@ WDI_ProcessHostSuspendInd
        pSuspendIndParams->wdiSuspendParams.ucConfiguredMcstBcstFilterSetting;
 
   halWlanSuspendIndparams.activeSessionCount =
-       WDI_GetActiveSessionsCount(pWDICtx, NULL, eWLAN_PAL_TRUE);
+       WDI_GetActiveSessionsCount(pWDICtx);
 
   wpalMemoryCopy( pSendBuffer+usDataOffset, &halWlanSuspendIndparams,
                                          sizeof(tHalWlanHostSuspendIndParam));
@@ -10584,78 +10530,6 @@ WDI_ProcessTrafficStatsInd
   wdiStatus = WDI_SendIndication( pWDICtx, pSendBuffer, usSendSize);
   return  ( wdiStatus != WDI_STATUS_SUCCESS )?wdiStatus:WDI_STATUS_SUCCESS_SYNC;
 }/*WDI_ProcessTrafficStatsInd*/
-
-#ifdef WLAN_FEATURE_11W
-/**
- @brief Process Exclude Unencrypted Indications function (called
-        when Main FSM allows it)
-
- @param  pWDICtx:         pointer to the WLAN DAL context
-              pEventData:      pointer to the event information structure
-
- @see
- @return Result of the function call
-*/
-WDI_Status
-WDI_ProcessExcludeUnencryptInd
-(
-  WDI_ControlBlockType*  pWDICtx,
-  WDI_EventInfoType*     pEventData
-)
-{
-  WDI_ExcludeUnencryptIndType*       pWDIExcUnencIndParams;
-  wpt_uint8*                     pSendBuffer         = NULL;
-  wpt_uint16                     usDataOffset        = 0;
-  wpt_uint16                     usSendSize          = 0;
-  WDI_Status                     wdiStatus;
-  tHalWlanExcludeUnEncryptedIndParam* pHalExcUnencIndParams;
-  /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  /*-------------------------------------------------------------------------
-     Sanity check
-  -------------------------------------------------------------------------*/
-  if (( NULL == pEventData ) || ( NULL == pEventData->pEventData ))
-  {
-      WPAL_TRACE( eWLAN_MODULE_DAL_CTRL,  eWLAN_PAL_TRACE_LEVEL_WARN,
-               "%s: Invalid parameters in Exclude Unencrypted ind",__func__);
-      WDI_ASSERT(0);
-      return WDI_STATUS_E_FAILURE;
-  }
-
-  pWDIExcUnencIndParams = (WDI_ExcludeUnencryptIndType *)pEventData->pEventData;
-
-  /*-----------------------------------------------------------------------
-     Get message buffer
-   -----------------------------------------------------------------------*/
-  if (( WDI_STATUS_SUCCESS != WDI_GetMessageBuffer( pWDICtx,
-                         WDI_EXCLUDE_UNENCRYPTED_IND,
-                     sizeof(tHalWlanExcludeUnEncryptedIndParam),
-                     &pSendBuffer, &usDataOffset, &usSendSize))||
-        (usSendSize < (usDataOffset + sizeof(tHalWlanExcludeUnEncryptedIndParam))))
-  {
-      WPAL_TRACE( eWLAN_MODULE_DAL_CTRL,  eWLAN_PAL_TRACE_LEVEL_FATAL,
-                  "Unable to get send buffer in Exclude Unencrypted Ind ");
-      WDI_ASSERT(0);
-      return WDI_STATUS_E_FAILURE;
-  }
-
-  pHalExcUnencIndParams = (tHalWlanExcludeUnEncryptedIndParam*)(pSendBuffer+usDataOffset);
-
-  pHalExcUnencIndParams->bDot11ExcludeUnencrypted = pWDIExcUnencIndParams->bExcludeUnencrypt;
-
-  wpalMemoryCopy(pHalExcUnencIndParams->bssId,
-                 pWDIExcUnencIndParams->bssid, WDI_MAC_ADDR_LEN);
-
-  /*-------------------------------------------------------------------------
-    Send Suspend Request to HAL
-  -------------------------------------------------------------------------*/
-  pWDICtx->wdiReqStatusCB     = pWDIExcUnencIndParams->wdiReqStatusCB;
-  pWDICtx->pReqStatusUserData = pWDIExcUnencIndParams->pUserData;
-
-  wdiStatus = WDI_SendIndication( pWDICtx, pSendBuffer, usSendSize);
-  return  ( wdiStatus != WDI_STATUS_SUCCESS )?wdiStatus:WDI_STATUS_SUCCESS_SYNC;
-}/*WDI_ProcessExcludeUnencryptInd*/
-#endif
 
 /*==========================================================================
                   MISC CONTROL PROCESSING REQUEST API
@@ -21302,19 +21176,14 @@ WDI_FindEmptySession
 
 
  @param  pWDICtx:       pointer to the WLAN DAL context
-         macBSSID:      pointer to BSSID. If NULL, get all the session.
-                        If not NULL, count ActiveSession by excluding (TRUE) or including (FALSE) skipBSSID.
-         skipBSSID:     if TRUE, get all the sessions except matching to macBSSID. If FALSE, get all session.
-                        This argument is ignored if macBSSID is NULL.
+
  @see
  @return Number of sessions in use
 */
 wpt_uint8
 WDI_GetActiveSessionsCount
 (
-  WDI_ControlBlockType*   pWDICtx,
-  wpt_macAddr             macBSSID,
-  wpt_boolean             skipBSSID
+  WDI_ControlBlockType*   pWDICtx
 )
 {
   wpt_uint8 i, ucCount = 0;
@@ -21325,17 +21194,10 @@ WDI_GetActiveSessionsCount
     ------------------------------------------------------------------------*/
   for ( i = 0; i < WDI_MAX_BSS_SESSIONS; i++ )
   {
-    if ( macBSSID && skipBSSID &&
-        (eWLAN_PAL_TRUE ==
-                wpalMemoryCompare(pWDICtx->aBSSSessions[i].macBSSID, macBSSID,
-                WDI_MAC_ADDR_LEN)))
-    {
-      continue;
-    }
-    else if ( pWDICtx->aBSSSessions[i].bInUse )
-    {
+     if ( pWDICtx->aBSSSessions[i].bInUse )
+     {
        ucCount++;
-    }
+     }
   }
 
   return ucCount;
@@ -21784,10 +21646,6 @@ WDI_2_HAL_REQ_TYPE
     return WLAN_HAL_HOST_SUSPEND_IND;
   case WDI_TRAFFIC_STATS_IND:
     return WLAN_HAL_CLASS_B_STATS_IND;
-#ifdef WLAN_FEATURE_11W
-  case WDI_EXCLUDE_UNENCRYPTED_IND:
-    return WLAN_HAL_EXCLUDE_UNENCRYPTED_IND;
-#endif
   case WDI_KEEP_ALIVE_REQ:
     return WLAN_HAL_KEEP_ALIVE_REQ;
 #ifdef WLAN_FEATURE_ROAM_SCAN_OFFLOAD

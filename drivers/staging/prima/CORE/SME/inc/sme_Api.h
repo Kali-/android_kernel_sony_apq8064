@@ -2588,16 +2588,6 @@ eHalStatus sme_getRoamScanChannelList(tHalHandle hHal, tANI_U8 *pChannelList,
 eHalStatus sme_GetCountryRevision(tHalHandle hHal, tANI_U8 *pRevision);
 
 /*--------------------------------------------------------------------------
-  \brief sme_getIsCcxFeatureEnabled() - get CCX feature enabled or not
-  This is a synchronuous call
-  \param hHal - The handle returned by macOpen.
-  \return TRUE (1) - if the CCX feature is enabled
-          FALSE (0) - if feature is disabled (compile or runtime)
-  \sa
-  --------------------------------------------------------------------------*/
-tANI_BOOLEAN sme_getIsCcxFeatureEnabled(tHalHandle hHal);
-
-/*--------------------------------------------------------------------------
   \brief sme_getWESMode() - getWES Mode
   This is a synchronous call
   \param hHal - The handle returned by macOpen.
@@ -2615,16 +2605,15 @@ v_BOOL_t sme_GetWESMode(tHalHandle hHal);
   --------------------------------------------------------------------------*/
 v_BOOL_t sme_GetRoamScanControl(tHalHandle hHal);
 
-/* ---------------------------------------------------------------------------
-    \fn sme_UpdateEmptyScanRefreshPeriod
-    \brief  Update nnEmptyScanRefreshPeriod
-            This function is called through dynamic setConfig callback function
-            to configure nnEmptyScanRefreshPeriod
-            Usage: adb shell iwpriv wlan0 setConfig nEmptyScanRefreshPeriod=[0 .. 60]
-    \param  hHal - HAL handle for device
-    \param  nEmptyScanRefreshPeriod - scan period following empty scan results.
-    \- return Success or failure
-    -------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------
+  \brief sme_getIsCcxFeatureEnabled() - get CCX feature enabled or not
+  This is a synchronuous call
+  \param hHal - The handle returned by macOpen.
+  \return TRUE (1) - if the CCX feature is enabled
+          FALSE (0) - if feature is disabled (compile or runtime)
+  \sa
+  --------------------------------------------------------------------------*/
+tANI_BOOLEAN sme_getIsCcxFeatureEnabled(tHalHandle hHal);
 
 /*--------------------------------------------------------------------------
   \brief sme_getIsLfrFeatureEnabled() - get LFR feature enabled or not
@@ -2750,33 +2739,5 @@ eHalStatus sme_UpdateDfsSetting(tHalHandle hHal, tANI_U8 fUpdateEnableDFSChnlSca
  * SME API to enable/disable WLAN driver initiated SSR
  */
 void sme_UpdateEnableSSR(tHalHandle hHal, tANI_BOOLEAN enableSSR);
-
-/* ---------------------------------------------------------------------------
-
-    \fn sme_SetPhyMode
-
-    \brief Changes the PhyMode.
-
-    \param hHal - The handle returned by macOpen.
-
-    \param phyMode new phyMode which is to set
-
-    \return eHalStatus  SUCCESS.
-
-  -------------------------------------------------------------------------------*/
-eHalStatus sme_SetPhyMode(tHalHandle hHal, eCsrPhyMode phyMode);
-
-/* ---------------------------------------------------------------------------
-
-    \fn sme_GetPhyMode
-
-    \brief gets current PhyMode.
-
-    \param hHal - The handle returned by macOpen.
-
-    \return eHalStatus PhyMode
-
-  -------------------------------------------------------------------------------*/
-eCsrPhyMode sme_GetPhyMode(tHalHandle hHal);
 
 #endif //#if !defined( __SME_API_H )

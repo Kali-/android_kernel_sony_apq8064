@@ -165,10 +165,6 @@
 #define WLAN_HDD_P2P_SOCIAL_CHANNELS 3
 #define WLAN_HDD_P2P_SINGLE_CHANNEL_SCAN 1
 
-#ifdef WLAN_FEATURE_11W
-#define WLAN_HDD_SA_QUERY_ACTION_FRAME 8
-#endif
-
 #define WLAN_HDD_PUBLIC_ACTION_TDLS_DISC_RESP 14
 #define WLAN_HDD_TDLS_ACTION_FRAME 12
 #ifdef WLAN_FEATURE_HOLD_RX_WAKELOCK
@@ -229,14 +225,6 @@ typedef struct hdd_chip_reset_stats_s
    __u32    totalUnknownExceptions;
 } hdd_chip_reset_stats_t;
 
-#ifdef WLAN_FEATURE_11W
-typedef struct hdd_pmf_stats_s
-{
-   uint8    numUnprotDeauthRx;
-   uint8    numUnprotDisassocRx;
-} hdd_pmf_stats_t;
-#endif
-
 typedef struct hdd_stats_s
 {
    tCsrSummaryStatsInfo       summary_stat;
@@ -247,9 +235,6 @@ typedef struct hdd_stats_s
    tCsrPerStaStatsInfo        perStaStats;
    hdd_tx_rx_stats_t          hddTxRxStats;
    hdd_chip_reset_stats_t     hddChipResetStats;
-#ifdef WLAN_FEATURE_11W
-   hdd_pmf_stats_t            hddPmfStats;
-#endif
 } hdd_stats_t;
 
 typedef enum
@@ -411,8 +396,7 @@ typedef enum device_mode
    WLAN_HDD_P2P_GO,
    WLAN_HDD_MONITOR,
    WLAN_HDD_FTM,
-   WLAN_HDD_IBSS,
-   WLAN_HDD_P2P_DEVICE,
+   WLAN_HDD_P2P_DEVICE
 }device_mode_t;
 
 typedef enum rem_on_channel_request_type
@@ -454,7 +438,6 @@ typedef struct
    v_TIME_t             lastblockTs;
    v_TIME_t             lastOpenTs;
    struct netdev_queue *blockedQueue;
-   v_BOOL_t             qBlocked;
 } hdd_thermal_mitigation_info_t;
 
 typedef struct hdd_remain_on_chan_ctx
